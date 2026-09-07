@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mondiale FCL Automation</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <section class="panel">
+      <div class="panel-glow panel-glow-left"></div>
+      <div class="panel-glow panel-glow-right"></div>
+
+      <header class="hero">
+        <div class="hero-logo">
+          <span class="brand-mark">MONDIALE</span>
+          <span class="brand-sub">FCL Rates</span>
+        </div>
+      </header>
+
+      <form id="upload-form" class="upload-form">
+        <label class="dropzone" id="dropzone" for="file-input">
+          <input id="file-input" name="file" type="file" accept=".pdf" hidden>
+          <div class="dropzone-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <path d="M32 11v25M21 22l11-11 11 11M16 39v8a5 5 0 0 0 5 5h22a5 5 0 0 0 5-5v-8"></path>
+            </svg>
+          </div>
+          <p class="dropzone-title">Drag &amp; Drop your PDF file here</p>
+          <p class="dropzone-subtitle">or</p>
+          <span class="browse-button">Browse Files</span>
+          <p class="selected-file" id="file-name">Select `.pdf` file</p>
+        </label>
+
+        <button id="process-button" class="process-button" type="submit" disabled>
+          Process File
+        </button>
+      </form>
+
+      <footer class="status-bar">
+        <div class="status-divider"></div>
+        <div class="status-line">
+          <span class="status-dot"></span>
+          <span id="status-text">100% it automatically download the result.</span>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <div class="loading-overlay" id="loading-overlay" hidden>
+    <div class="loading-card" role="status" aria-live="polite">
+      <div class="loading-orb"></div>
+      <div class="loading-rings">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <p class="loading-title">Processing your Mondiale rates</p>
+      <p class="loading-copy" id="loading-text">Preparing the workbook and your download...</p>
+      <div class="loading-progress">
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
