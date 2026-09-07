@@ -14,10 +14,10 @@ Then open http://localhost:5000, drop the quotation PDF on the dropzone, and pre
 **Process File**. The workbook downloads automatically as
 `Mondiale_FCL_YYYY-MM-DD.xlsx` (today's date).
 
-An 86-page quotation takes about a minute on a full desktop core — nearly all
-of it inside pdfminer, reading the pages. The page shows a progress overlay for
-the duration. That is also why gunicorn runs with `--timeout 600`; the default
-30s would kill the request.
+An 86-page quotation takes about 5 seconds locally (7s end to end over HTTP).
+The page shows a progress overlay while it works. gunicorn still runs with
+`--timeout 600` so that a much larger quotation, or a slow instance, cannot be
+cut off mid-parse.
 
 ## Deploying to Render
 
@@ -32,12 +32,10 @@ and point it at this repo. Or create a Web Service by hand with:
 If a build ever fails fetching a wheel for `Pillow` or `pypdfium2`, drop that
 file to `3.13`.
 
-**Pick the instance size deliberately.** Peak memory is only ~100 MB, so the
-free tier's 512 MB is ample — but free gives **0.1 CPU**, and this workload is
-CPU-bound, so a full quotation that takes a minute locally can take many
-minutes there. `starter` (0.5 CPU) or `standard` (1 CPU) is the difference
-between usable and not. Free instances also spin down after 15 minutes idle and
-cold-start in 30-60s.
+The free instance type (512 MB RAM, 0.1 CPU) is enough: peak memory is ~90 MB,
+and since the parse is only a few CPU-seconds, even a tenth of a core finishes
+in well under a minute. Free instances do spin down after 15 minutes idle and
+cold-start in 30-60s, so the first request after a quiet spell is slow.
 
 ## Output
 
@@ -74,6 +72,20 @@ The quotation is an Excel export, so every page carries the same ruled grid.
 `mondiale_parser.py` assigns each word to a column by its x-position against
 that grid rather than by splitting text, which keeps sparse rows (lots of
 dashes) aligned.
+
+Two PDF libraries are used deliberately:
+
+- **pdfium** (`pypdfium2`) reads the rate tables. It decodes glyphs in C, where
+  pdfminer allocates a Python object per glyph — about 20x slower on 324,000
+  glyphs. Word boundaries come from a 1.0pt gap threshold, calibrated so that
+  pdfium and pdfplumber agree exactly on the tables.
+- **pdfplumber** reads the notes blocks. These are prose, and pdfium
+  synthesises spaces from glyph gaps, which lands mid-word often enough to
+  corrupt the text (`per` becoming `pe r`). Notes appear on roughly 8 of the 86
+  pages, so the cost is small.
+
+Swapping the tables onto pdfium cut a full quotation from 56s to 5s with
+byte-identical output — verified cell-for-cell against the previous result.
 
 Two details are worth knowing:
 
