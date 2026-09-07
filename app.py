@@ -59,4 +59,10 @@ def too_large(_error):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    # Local development only; Render runs this through gunicorn (see Procfile).
+    # Debug is opt-in because Werkzeug's debugger is a remote shell if exposed.
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=os.environ.get("FLASK_DEBUG") == "1",
+    )

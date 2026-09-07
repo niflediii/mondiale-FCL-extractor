@@ -14,10 +14,30 @@ Then open http://localhost:5000, drop the quotation PDF on the dropzone, and pre
 **Process File**. The workbook downloads automatically as
 `Mondiale_FCL_YYYY-MM-DD.xlsx` (today's date).
 
-An 86-page quotation takes about a minute — nearly all of it inside pdfminer,
-reading the pages. The page shows a progress overlay for the duration. That is
-also why the `Procfile` runs gunicorn with `--timeout 300`; the default 30s
-would kill the request.
+An 86-page quotation takes about a minute on a full desktop core — nearly all
+of it inside pdfminer, reading the pages. The page shows a progress overlay for
+the duration. That is also why gunicorn runs with `--timeout 600`; the default
+30s would kill the request.
+
+## Deploying to Render
+
+`render.yaml` is a Blueprint: in the Render dashboard choose **New > Blueprint**
+and point it at this repo. Or create a Web Service by hand with:
+
+- Language: **Python 3**
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app --workers 1 --threads 4 --timeout 600 --bind 0.0.0.0:$PORT`
+
+`.python-version` pins Python 3.14 (the version this was built and tested on).
+If a build ever fails fetching a wheel for `Pillow` or `pypdfium2`, drop that
+file to `3.13`.
+
+**Pick the instance size deliberately.** Peak memory is only ~100 MB, so the
+free tier's 512 MB is ample — but free gives **0.1 CPU**, and this workload is
+CPU-bound, so a full quotation that takes a minute locally can take many
+minutes there. `starter` (0.5 CPU) or `standard` (1 CPU) is the difference
+between usable and not. Free instances also spin down after 15 minutes idle and
+cold-start in 30-60s.
 
 ## Output
 

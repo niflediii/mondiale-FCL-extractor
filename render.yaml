@@ -1,0 +1,15 @@
+# Render Blueprint. Deploy with: New > Blueprint, then point Render at this repo.
+#
+# `plan: free` is 512 MB RAM / 0.1 CPU. Memory is fine (peak ~100 MB), but the
+# parse is CPU-bound and takes ~1 min on a full desktop core, so on 0.1 CPU an
+# 86-page quotation can take many minutes. Move to `starter` or `standard` if
+# processing is too slow.
+services:
+  - type: web
+    name: mondiale-fcl-extractor
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # --timeout must exceed the parse duration; gunicorn's default 30s kills it.
+    startCommand: gunicorn app:app --workers 1 --threads 4 --timeout 600 --bind 0.0.0.0:$PORT
+    healthCheckPath: /
